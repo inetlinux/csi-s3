@@ -3,12 +3,14 @@ package s3
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"io"
+	"net/http"
 	"net/url"
 	"path"
 )
@@ -55,8 +57,9 @@ func NewClient(cfg *Config) (*s3Client, error) {
 		endpoint = u.Hostname() + ":" + u.Port()
 	}
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, client.Config.Region),
-		Secure: ssl,
+		Creds:     credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, client.Config.Region),
+		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+		Secure:    ssl,
 	})
 	if err != nil {
 		return nil, err
